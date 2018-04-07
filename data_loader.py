@@ -51,8 +51,5 @@ class DataLoader:
         if data is None:
             data = quandl.get(self.tickers, start_date=self.start_date, end_date=self.end_date)
             DataLoader._save_pickle(data, self.data_path)
-        print('dupa')
 
-
-loader = DataLoader()
-loader.load()
+        return data
