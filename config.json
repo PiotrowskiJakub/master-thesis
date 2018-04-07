@@ -1,0 +1,5 @@
+{
+  "quandl_key": "jPGm5gjF1imaezGU9QMU",
+  "tickers_path": "data/stock_tickers.csv",
+  "data_path": "data/data.pickle"
+}
