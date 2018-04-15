@@ -1,5 +1,13 @@
 {
-  "quandl_key": "jPGm5gjF1imaezGU9QMU",
-  "tickers_path": "data/stock_tickers.csv",
-  "data_path": "data/data.pickle"
+  "data": {
+    "quandl_key": "jPGm5gjF1imaezGU9QMU",
+    "tickers_path": "data/stock_tickers.csv",
+    "data_path": "data/data.pickle"
+  },
+  "model": {
+    "learning_rate": 0.0001,
+    "input_size": 1,
+    "hidden_size": 128,
+    "output_size": 5
+  }
 }

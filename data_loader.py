@@ -1,16 +1,17 @@
 import csv
 import datetime
-import json
 import pickle
 from os import path
 
 import quandl
 
+from utils import load_config
+
 
 class DataLoader:
 
     def __init__(self):
-        config = DataLoader._load_config()
+        config = load_config()['data']
         quandl.ApiConfig.api_key = config['quandl_key']
         tickers_path = config['tickers_path']
         self.data_path = config['data_path']
@@ -18,12 +19,6 @@ class DataLoader:
         self.start_date = datetime.date(1990, 1, 1)
         # self.start_date = datetime.date(2018, 3, 27)
         self.end_date = datetime.datetime.now().date()
-
-    @staticmethod
-    def _load_config():
-        with open('config.json', 'r') as f:
-            config = json.load(f)
-        return config
 
     @staticmethod
     def _load_tickers(tickers_path):
