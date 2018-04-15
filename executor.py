@@ -17,6 +17,7 @@ class Executor:
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=config['learning_rate'])
         self.X, self.y = Executor._read_data()
+        self.running_loss = 0.0
 
     @staticmethod
     def _read_data():
@@ -25,11 +26,16 @@ class Executor:
         return preprocessor.prepare_dataset()
 
     def train(self):
-        for idx, x in enumerate(self.X):
-            x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
-            out = Variable(torch.LongTensor(self.y[idx]))
-            output, loss = self._run_step(x, out)
-            print(loss)
+        for epoch in range(5):
+            for i, x in enumerate(self.X):
+                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
+                out = Variable(torch.LongTensor(self.y[i]))
+                output, loss = self._run_step(x, out)
+                self.running_loss += loss
+                if i % 100 == 0:
+                    print('[%d, %5d] loss: %.3f' %
+                          (epoch + 1, i + 1, self.running_loss / 100))
+                    self.running_loss = 0.0
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
