@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.model_selection import train_test_split
 from torch.autograd import Variable
 
 from data_loader import DataLoader
@@ -12,30 +13,32 @@ from utils import load_config
 class Executor:
 
     def __init__(self):
-        config = load_config()['model']
-        self.model = Model(config['input_size'], config['hidden_size'], config['output_size'])
+        self.config = load_config()['model']
+        self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'])
         self.loss = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=config['learning_rate'])
-        self.X, self.y = Executor._read_data()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data()
         self.running_loss = 0.0
 
     @staticmethod
     def _read_data():
         data = DataLoader().load()
         preprocessor = Preprocessor(data)
-        return preprocessor.prepare_dataset()
+        X, y = preprocessor.prepare_dataset()
+        return train_test_split(X, y, test_size=0.1, random_state=42, shuffle=False)
 
     def train(self):
-        for epoch in range(5):
-            for i, x in enumerate(self.X):
+        for epoch in range(self.config['epochs']):
+            for i, x in enumerate(self.X_train):
                 x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
-                out = Variable(torch.LongTensor(self.y[i]))
+                out = Variable(torch.LongTensor(self.y_train[i]))
                 output, loss = self._run_step(x, out)
                 self.running_loss += loss
-                if i % 100 == 0:
-                    print('[%d, %5d] loss: %.3f' %
-                          (epoch + 1, i + 1, self.running_loss / 100))
+                if i % 100 == 99:
+                    print('[%d, %5d/%5d] loss: %.3f' %
+                          (epoch + 1, i + 1, len(self.X_train), self.running_loss / 100))
                     self.running_loss = 0.0
+            self.test()
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
@@ -47,8 +50,19 @@ class Executor:
 
         return output, err.data[0]
 
+    def test(self):
+        correct = 0
+        for i, x in enumerate(self.X_test):
+            x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
+            target = Variable(torch.LongTensor(self.y_test[i]))
+            outputs = self.model(x)
+            _, predicted = torch.max(outputs.data, 1)
+            correct += (predicted == torch.nonzero(target.data).squeeze(1)).sum()
+
+        print('Accuracy of the network: %d %%' % (100 * correct / len(self.y_test)))
+
 
 if __name__ == '__main__':
     executor = Executor()
     executor.train()
-    print('All done')
+    print('Finished Training')
