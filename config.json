@@ -1,4 +1,5 @@
 {
+  "comet_key": "rhoJOirQx3GFfhzraNvBxk05c",
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
     "tickers_path": "data/stock_tickers.csv",
@@ -7,8 +8,9 @@
   "model": {
     "learning_rate": 0.001,
     "input_size": 1,
-    "hidden_size": 128,
+    "hidden_size": 64,
     "output_size": 5,
-    "epochs": 1
+    "layers_num": 3,
+    "epochs": 10
   }
 }
