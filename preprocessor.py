@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn import preprocessing
 
 PAST_DAYS = 100
 FORECAST_DAYS = 10
@@ -24,7 +25,7 @@ class Preprocessor:
                 max_price = np.max(prices)
                 change_percentage = (max_price - X[-1]) / X[-1]
                 y = self._generate_labels(change_percentage)
-                inputs.append(X)
+                inputs.append(preprocessing.scale(X))
                 labels.append(y)
 
         return inputs, labels

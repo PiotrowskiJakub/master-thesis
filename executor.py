@@ -25,14 +25,14 @@ class Executor:
                            self.config['layers_num'])
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0)
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data()
 
     def _init_comet_experiment(self, config):
         self.experiment = Experiment(api_key=config['comet_key'])
         self.experiment.log_multiple_params(config['model'])
 
     @staticmethod
-    def _read_data(test_size=0.1):
+    def _read_data(test_size=0.2):
         data = DataLoader().load()
         preprocessor = Preprocessor(data)
         X, y = preprocessor.prepare_dataset()
@@ -71,9 +71,6 @@ class Executor:
 
     def test(self):
         correct = 0
-        if len(self.X_test) == 0:
-            self.X_test = self.X_train
-            self.y_test = self.y_train
         with self.experiment.test():
             for i, x in enumerate(self.X_test):
                 x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
@@ -96,6 +93,6 @@ class Executor:
 
 if __name__ == '__main__':
     executor = Executor()
-    # executor.train()
-    executor.visualize_data()
+    executor.train()
+    # executor.visualize_data()
     print('Finished Training')
