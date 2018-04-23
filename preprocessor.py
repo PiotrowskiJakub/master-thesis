@@ -20,11 +20,12 @@ class Preprocessor:
                 X = self._remove_nan(close[i:i + PAST_DAYS, company_num])
                 prices = self._remove_nan(close[i + PAST_DAYS:i + PAST_DAYS + FORECAST_DAYS, company_num])
                 i = i + PAST_DAYS + FORECAST_DAYS
-                if prices.size == 0 or X.size == 0:
+                if prices.size == 0 or X.size != 100:
                     continue
                 max_price = np.max(prices)
-                change_percentage = (max_price - X[-1]) / X[-1]
-                y = self._generate_labels(change_percentage)
+                last_mean = np.mean(X[-FORECAST_DAYS:])
+                change_percentage = (max_price - last_mean) / last_mean
+                y = np.array([round(change_percentage, 2)])
                 inputs.append(preprocessing.scale(X))
                 labels.append(y)
 

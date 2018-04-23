@@ -8,9 +8,10 @@
   "model": {
     "learning_rate": 0.001,
     "input_size": 1,
-    "hidden_size": 64,
-    "output_size": 5,
-    "layers_num": 3,
-    "epochs": 10
+    "hidden_size": 128,
+    "output_size": 1,
+    "layers_num": 4,
+    "batch_size": 4,
+    "epochs": 15
   }
 }
