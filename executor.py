@@ -5,7 +5,6 @@ import numpy as np
 import seaborn as sns
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from comet_ml import Experiment
 from sklearn.model_selection import train_test_split
@@ -28,8 +27,8 @@ class Executor:
                            self.config['layers_num'], self.batch_size)
         self.loss = nn.MSELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'], momentum=0.9)
-        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0)
+        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'], momentum=0.2)
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.1)
 
     def _init_comet_experiment(self, config):
         self.experiment = Experiment(api_key=config['comet_key'])
@@ -45,7 +44,7 @@ class Executor:
     def train(self):
         with self.experiment.train():
             for epoch in range(self.config['epochs']):
-                self.experiment.log_current_epoch(epoch)
+                print("Epoch: %d" % epoch)
                 i = 0
                 while i < len(self.X_train) - self.batch_size:
                     x = np.concatenate(self.X_train[i:i + self.batch_size])
@@ -55,10 +54,11 @@ class Executor:
                     y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                     output, loss = self._run_step(x, y)
                     i += self.batch_size
+                    print('Training loss %d %%' % loss)
                     self.experiment.log_metric('loss', loss)
                     # similarity = F.cosine_similarity(output, y)
                     # self.experiment.log_metric('similarity', similarity.data[0])
-                # self.test()
+                self.test()
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
@@ -71,18 +71,26 @@ class Executor:
         return output, err.data[0]
 
     def test(self):
-        similarity_sum = 0.0
+        losses = 0
         with self.experiment.test():
-            for i, x in enumerate(self.X_test):
-                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
-                y = Variable(torch.from_numpy(self.y_test[i]).type(torch.FloatTensor)).view(1, -1)
+            i = 0
+            while i < len(self.X_test) - self.batch_size:
+                x = np.concatenate(self.X_test[i:i + self.batch_size])
+                y = np.concatenate(self.y_test[i:i + self.batch_size])
+                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(self.X_test[i].size,
+                                                                               self.batch_size, 1)
+                y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                 output = self.model(x)
-                similarity = F.cosine_similarity(output, y)
-                similarity_sum += similarity.data[0]
+                loss = self.loss(output, y)
+                loss = loss.data[0]
+                i += self.batch_size
+                print('Test loss %d %%' % loss)
+                self.experiment.log_metric('loss', loss)
+                losses += loss
 
-            similarity_sum /= len(self.y_test)
-            print('Accuracy of the network: %d %%' % similarity)
-            self.experiment.log_metric('accuracy', similarity)
+            losses /= len(self.y_test)
+            print('Averaged test loss: %d %%' % losses)
+            self.experiment.log_metric('Averaged loss', losses)
 
     def visualize_data(self):
         fig, ax = plt.subplots()

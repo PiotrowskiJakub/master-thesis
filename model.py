@@ -28,5 +28,5 @@ class Model(nn.Module):
                 output = self.linear(input_t)
             outputs += [output]
 
-        outputs = torch.cat(output).view(-1, 1)
+        outputs = torch.cat(outputs).view(-1, 1)
         return outputs
