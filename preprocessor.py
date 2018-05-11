@@ -14,19 +14,21 @@ class Preprocessor:
     def prepare_dataset(self):
         inputs, labels = [], []
         close = self._select('Adj. Close').as_matrix()
+        volume = self._select('Adj. Volume').as_matrix()
         for company_num in range(close.shape[1]):
             i = 0
             while i < close.shape[0]:
-                X = self._remove_nan(close[i:i + PAST_DAYS, company_num])
+                close_X = self._remove_nan(close[i:i + PAST_DAYS, company_num])
+                volume_X = self._remove_nan(volume[i:i + PAST_DAYS, company_num])
                 prices = self._remove_nan(close[i + PAST_DAYS:i + PAST_DAYS + FORECAST_DAYS, company_num])
-                i = i + PAST_DAYS + FORECAST_DAYS
-                if prices.size == 0 or X.size != 100:
+                i = i + PAST_DAYS
+                if prices.size == 0 or close_X.size != 100:
                     continue
                 max_price = np.max(prices)
-                last_mean = np.mean(X[-FORECAST_DAYS:])
+                last_mean = np.mean(close_X[-FORECAST_DAYS:])
                 change_percentage = ((max_price - last_mean) / last_mean) * 100
                 y = np.array([round(change_percentage, 2)])
-                inputs.append(preprocessing.scale(X))
+                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X))))
                 labels.append(y)
 
         return inputs, labels

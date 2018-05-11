@@ -49,8 +49,8 @@ class Executor:
                 while i < len(self.X_train) - self.batch_size:
                     x = np.concatenate(self.X_train[i:i + self.batch_size])
                     y = np.concatenate(self.y_train[i:i + self.batch_size])
-                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(self.X_train[i].size,
-                                                                                   self.batch_size, 1)
+                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(self.X_train[i]),
+                                                                                   self.batch_size, 2)
                     y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                     output, loss = self._run_step(x, y)
                     i += self.batch_size
