@@ -28,7 +28,9 @@ class Preprocessor:
                 last_mean = np.mean(close_X[-FORECAST_DAYS:])
                 change_percentage = ((max_price - last_mean) / last_mean) * 100
                 y = np.array([round(change_percentage, 2)])
-                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X))))
+                derivatives = np.diff(close_X)
+                derivatives = np.append(derivatives, derivatives[-1])
+                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X), derivatives)))
                 labels.append(y)
 
         return inputs, labels
