@@ -50,7 +50,8 @@ class Executor:
                     x = np.concatenate(self.X_train[i:i + self.batch_size])
                     y = np.concatenate(self.y_train[i:i + self.batch_size])
                     x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(self.X_train[i]),
-                                                                                   self.batch_size, 2)
+                                                                                   self.batch_size,
+                                                                                   self.config['input_size'])
                     y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                     output, loss = self._run_step(x, y)
                     i += self.batch_size
@@ -77,8 +78,9 @@ class Executor:
             while i < len(self.X_test) - self.batch_size:
                 x = np.concatenate(self.X_test[i:i + self.batch_size])
                 y = np.concatenate(self.y_test[i:i + self.batch_size])
-                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(self.X_test[i].size,
-                                                                               self.batch_size, 1)
+                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(self.X_test[i]),
+                                                                               self.batch_size,
+                                                                               self.config['input_size'])
                 y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                 output = self.model(x)
                 loss = self.loss(output, y)
@@ -88,7 +90,8 @@ class Executor:
                 self.experiment.log_metric('loss', loss)
                 losses += loss
 
-            losses /= len(self.y_test)
+            batches_num = len(self.y_test) // self.batch_size
+            losses /= batches_num
             print('Averaged test loss: %d %%' % losses)
             self.experiment.log_metric('Averaged loss', losses)
 
