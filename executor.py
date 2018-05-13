@@ -1,6 +1,7 @@
 from random import sample
 
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 import torch
 import torch.nn as nn
@@ -32,31 +33,26 @@ class Executor:
         self.experiment.log_multiple_params(config['model'])
 
     @staticmethod
-    def _read_data(test_size=0.2):
+    def _read_data(test_size=0.1):
         data = DataLoader().load()
         preprocessor = Preprocessor(data)
         X, y = preprocessor.prepare_dataset()
         return train_test_split(X, y, test_size=test_size, random_state=42, shuffle=False)
 
     def train(self):
-        running_loss = 0.0
         with self.experiment.train():
             for epoch in range(self.config['epochs']):
                 correct = 0
                 for i, x in enumerate(self.X_train):
-                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
+                    x = np.array(x)
+                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(x), 1, self.config['input_size'])
                     out = Variable(torch.LongTensor(self.y_train[i]))
                     output, loss = self._run_step(x, out)
-                    running_loss += loss
                     _, predicted = torch.max(output.data, 1)
                     correct += (predicted == torch.nonzero(out.data).squeeze(1)).sum()
+                    print('Training loss: %.3f. Accuracy: %.3f' % (loss, correct / (i + 1)))
                     self.experiment.log_metric('loss', loss)
-                    self.experiment.log_metric('accuracy', correct / len(self.X_train))
-                    if i % 100 == 99:
-                        print('[%d, %5d/%5d] loss: %.3f' %
-                              (epoch + 1, i + 1, len(self.X_train), running_loss / 100))
-                        self.experiment.log_metric('averaged loss', running_loss / 100)
-                        running_loss = 0.0
+                    self.experiment.log_metric('accuracy', correct / (i + 1))
                 self.test()
 
     def _run_step(self, input_seq, target):
@@ -73,21 +69,22 @@ class Executor:
         correct = 0
         with self.experiment.test():
             for i, x in enumerate(self.X_test):
-                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(x.size, 1, 1)
+                x = np.array(x)
+                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(x), 1, self.config['input_size'])
                 target = Variable(torch.LongTensor(self.y_test[i]))
                 outputs = self.model(x)
                 _, predicted = torch.max(outputs.data, 1)
                 correct += (predicted == torch.nonzero(target.data).squeeze(1)).sum()
 
             accuracy = (100 * correct / len(self.y_test))
-            print('Accuracy of the network: %d %%' % accuracy)
+            print('Accuracy of the network: %.3f %%' % accuracy)
             self.experiment.log_metric('accuracy', accuracy)
 
     def visualize_data(self):
         fig, ax = plt.subplots()
-        data = sample(self.X_train, 50)
-        for x in data:
-            sns.distplot(x, ax=ax, kde=False)
+        data = sample(self.y_train, 50)
+        for y in data:
+            sns.distplot(y, ax=ax, kde=False)
         plt.show()
 
 

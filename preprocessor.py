@@ -3,7 +3,7 @@ from sklearn import preprocessing
 
 PAST_DAYS = 100
 FORECAST_DAYS = 10
-CHANGE_THRESHOLD_BOUNDARIES = [0.05, 0.03]  # Price change boundaries
+CHANGE_THRESHOLD_BOUNDARIES = [0.1, 0.05]  # Price change boundaries
 
 
 class Preprocessor:
@@ -14,18 +14,23 @@ class Preprocessor:
     def prepare_dataset(self):
         inputs, labels = [], []
         close = self._select('Adj. Close').as_matrix()
+        volume = self._select('Adj. Volume').as_matrix()
         for company_num in range(close.shape[1]):
             i = 0
             while i < close.shape[0]:
-                X = self._remove_nan(close[i:i + PAST_DAYS, company_num])
+                close_X = self._remove_nan(close[i:i + PAST_DAYS, company_num])
+                volume_X = self._remove_nan(volume[i:i + PAST_DAYS, company_num])
                 prices = self._remove_nan(close[i + PAST_DAYS:i + PAST_DAYS + FORECAST_DAYS, company_num])
-                i = i + PAST_DAYS + FORECAST_DAYS
-                if prices.size == 0 or X.size == 0:
+                i = i + PAST_DAYS
+                if prices.size == 0 or close_X.size == 0:
                     continue
                 max_price = np.max(prices)
-                change_percentage = (max_price - X[-1]) / X[-1]
+                last_mean = np.mean(close_X[-FORECAST_DAYS:])
+                change_percentage = (max_price - last_mean) / last_mean
                 y = self._generate_labels(change_percentage)
-                inputs.append(preprocessing.scale(X))
+                derivatives = np.diff(close_X)
+                derivatives = np.append(derivatives, derivatives[-1])
+                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X), derivatives)))
                 labels.append(y)
 
         return inputs, labels
