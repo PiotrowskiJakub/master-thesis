@@ -10,7 +10,7 @@
     "input_size": 3,
     "hidden_size": 256,
     "output_size": 5,
-    "layers_num": 4,
+    "layers_num": 6,
     "epochs": 10
   }
 }

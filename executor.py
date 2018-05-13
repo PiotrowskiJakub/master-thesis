@@ -25,7 +25,8 @@ class Executor:
         self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'],
                            self.config['layers_num'])
         self.loss = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
         self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data()
 
     def _init_comet_experiment(self, config):
