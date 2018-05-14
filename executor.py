@@ -26,16 +26,16 @@ class Executor:
         self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'],
                            self.config['layers_num'], self.batch_size)
         self.loss = nn.MSELoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'], momentum=0.2)
-        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.1)
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.02)
 
     def _init_comet_experiment(self, config):
         self.experiment = Experiment(api_key=config['comet_key'])
         self.experiment.log_multiple_params(config['model'])
 
     @staticmethod
-    def _read_data(test_size=0.2):
+    def _read_data(test_size=0.1):
         data = DataLoader().load()
         preprocessor = Preprocessor(data)
         X, y = preprocessor.prepare_dataset()
@@ -49,18 +49,14 @@ class Executor:
                 while i < len(self.X_train) - self.batch_size:
                     x = np.concatenate(self.X_train[i:i + self.batch_size])
                     y = np.concatenate(self.y_train[i:i + self.batch_size])
-                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor), requires_grad=True).view(
-                        len(self.X_train[i]),
-                        self.batch_size,
-                        self.config['input_size'])
-                    y = Variable(torch.from_numpy(y).type(torch.FloatTensor), requires_grad=True).view(self.batch_size,
-                                                                                                       -1)
+                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(self.X_train[i]),
+                                                                                   self.batch_size,
+                                                                                   self.config['input_size'])
+                    y = Variable(torch.from_numpy(y).type(torch.FloatTensor)).view(self.batch_size, -1)
                     output, loss = self._run_step(x, y)
                     i += self.batch_size
-                    print('Training loss %d %%' % loss)
+                    print('Training loss %.3f %%' % loss)
                     self.experiment.log_metric('loss', loss)
-                    # similarity = F.cosine_similarity(output, y)
-                    # self.experiment.log_metric('similarity', similarity.data[0])
                 self.test()
 
     def _run_step(self, input_seq, target):
