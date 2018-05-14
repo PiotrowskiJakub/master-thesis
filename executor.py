@@ -23,8 +23,8 @@ class Executor:
         self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'],
                            self.config['layers_num'])
         self.loss = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
         self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.85)
 
     def _init_comet_experiment(self, config):
@@ -45,10 +45,10 @@ class Executor:
                 for i, x in enumerate(self.X_train):
                     x = np.array(x)
                     x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(x), 1, self.config['input_size'])
-                    out = Variable(torch.LongTensor(self.y_train[i]))
+                    out = int(np.argmax(self.y_train[i]))
                     output, loss = self._run_step(x, out)
                     _, predicted = torch.max(output.data, 1)
-                    correct += (predicted == torch.nonzero(out.data).squeeze(1)).sum()
+                    correct += (predicted == out).sum()
                     print('Training loss: %.3f. Accuracy: %.3f' % (loss, correct / (i + 1)))
                     self.experiment.log_metric('loss', loss)
                     self.experiment.log_metric('accuracy', correct / (i + 1))
@@ -58,7 +58,7 @@ class Executor:
         self.optimizer.zero_grad()
 
         output = self.model(input_seq)
-        err = self.loss(output, torch.nonzero(target).squeeze(1))
+        err = self.loss(output, Variable(torch.LongTensor([target])))
         err.backward()
         self.optimizer.step()
 
