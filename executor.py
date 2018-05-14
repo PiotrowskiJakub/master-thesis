@@ -26,9 +26,9 @@ class Executor:
         self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'],
                            self.config['layers_num'], self.batch_size)
         self.loss = nn.MSELoss()
-        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
-        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.02)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.85)
 
     def _init_comet_experiment(self, config):
         self.experiment = Experiment(api_key=config['comet_key'])
@@ -57,7 +57,7 @@ class Executor:
                     i += self.batch_size
                     print('Training loss %.3f %%' % loss)
                     self.experiment.log_metric('loss', loss)
-                self.test()
+                # self.test()
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
