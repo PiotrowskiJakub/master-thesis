@@ -3,7 +3,7 @@ from sklearn import preprocessing
 
 PAST_DAYS = 100
 FORECAST_DAYS = 10
-CHANGE_THRESHOLD_BOUNDARIES = [0.1, 0.05]  # Price change boundaries
+CHANGE_THRESHOLD_BOUNDARIES = [0.1, 0.05, 0.03]  # Price change boundaries
 
 
 class Preprocessor:
@@ -30,7 +30,7 @@ class Preprocessor:
                 y = self._generate_labels(change_percentage)
                 derivatives = np.diff(close_X)
                 derivatives = np.append(derivatives, derivatives[-1])
-                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X), derivatives)))
+                inputs.append(list(zip(preprocessing.scale(close_X), preprocessing.scale(volume_X))))
                 labels.append(y)
 
         return inputs, labels

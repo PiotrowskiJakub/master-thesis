@@ -1,5 +1,3 @@
-from random import sample
-
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -25,9 +23,9 @@ class Executor:
         self.model = Model(self.config['input_size'], self.config['hidden_size'], self.config['output_size'],
                            self.config['layers_num'])
         self.loss = nn.CrossEntropyLoss()
-        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
-        self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
-        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
+        # self.optimizer = optim.SGD(self.model.parameters(), lr=self.config['learning_rate'])
+        self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.85)
 
     def _init_comet_experiment(self, config):
         self.experiment = Experiment(api_key=config['comet_key'])
@@ -54,7 +52,7 @@ class Executor:
                     print('Training loss: %.3f. Accuracy: %.3f' % (loss, correct / (i + 1)))
                     self.experiment.log_metric('loss', loss)
                     self.experiment.log_metric('accuracy', correct / (i + 1))
-                self.test()
+                # self.test()
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
@@ -81,16 +79,15 @@ class Executor:
             print('Accuracy of the network: %.3f %%' % accuracy)
             self.experiment.log_metric('accuracy', accuracy)
 
-    def visualize_data(self):
-        fig, ax = plt.subplots()
-        data = sample(self.y_train, 50)
-        for y in data:
-            sns.distplot(y, ax=ax, kde=False)
+    def visualize_labels(self):
+        data = self.y_train
+        data = np.argmax(np.array(data), axis=1)
+        sns.distplot(data, kde=False)
         plt.show()
 
 
 if __name__ == '__main__':
     executor = Executor()
     executor.train()
-    # executor.visualize_data()
+    # executor.visualize_labels()
     print('Finished Training')
