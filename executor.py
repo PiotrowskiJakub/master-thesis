@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.optim as optim
 from comet_ml import Experiment
 from sklearn.model_selection import train_test_split
-from torch.autograd import Variable
 
 from data_loader import DataLoader
 from model import Model
@@ -44,21 +43,21 @@ class Executor:
                 correct = 0
                 for i, x in enumerate(self.X_train):
                     x = np.array(x)
-                    x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(x), 1, self.config['input_size'])
+                    x = torch.from_numpy(x).type(torch.FloatTensor).view(len(x), 1, self.config['input_size'])
                     out = int(np.argmax(self.y_train[i]))
                     output, loss = self._run_step(x, out)
                     _, predicted = torch.max(output.data, 1)
                     correct += (predicted == out).sum()
                     print('Training loss: %.3f. Accuracy: %.3f' % (loss, correct / (i + 1)))
                     self.experiment.log_metric('loss', loss)
-                    self.experiment.log_metric('accuracy', correct / (i + 1))
+                    self.experiment.log_metric('accuracy', int(correct) / (i + 1))
                 # self.test()
 
     def _run_step(self, input_seq, target):
         self.optimizer.zero_grad()
 
         output = self.model(input_seq)
-        err = self.loss(output, Variable(torch.LongTensor([target])))
+        err = self.loss(output, torch.LongTensor([target]))
         err.backward()
         self.optimizer.step()
 
@@ -69,8 +68,8 @@ class Executor:
         with self.experiment.test():
             for i, x in enumerate(self.X_test):
                 x = np.array(x)
-                x = Variable(torch.from_numpy(x).type(torch.FloatTensor)).view(len(x), 1, self.config['input_size'])
-                target = Variable(torch.LongTensor(self.y_test[i]))
+                x = torch.from_numpy(x).type(torch.FloatTensor).view(len(x), 1, self.config['input_size'])
+                target = torch.LongTensor(self.y_test[i])
                 outputs = self.model(x)
                 _, predicted = torch.max(outputs.data, 1)
                 correct += (predicted == torch.nonzero(target.data).squeeze(1)).sum()
