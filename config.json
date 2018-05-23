@@ -1,5 +1,6 @@
 {
   "comet_key": "rhoJOirQx3GFfhzraNvBxk05c",
+  "use_cometml": false,
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
     "tickers_path": "data/stock_tickers.csv",

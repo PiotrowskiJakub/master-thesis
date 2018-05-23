@@ -1,3 +1,5 @@
+import unittest.mock
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -27,7 +29,10 @@ class Executor:
         self.X_train, self.X_test, self.y_train, self.y_test = Executor._read_data(0.85)
 
     def _init_comet_experiment(self, config):
-        self.experiment = Experiment(api_key=config['comet_key'])
+        if config['use_cometml']:
+            self.experiment = Experiment(api_key=config['comet_key'])
+        else:
+            self.experiment = unittest.mock.create_autospec(Experiment)
         self.experiment.log_multiple_params(config['model'])
 
     @staticmethod
@@ -61,7 +66,7 @@ class Executor:
         err.backward()
         self.optimizer.step()
 
-        return output, err.data[0]
+        return output, err.data.item()
 
     def test(self):
         correct = 0
