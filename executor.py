@@ -8,10 +8,12 @@ import torch.nn as nn
 import torch.optim as optim
 from comet_ml import Experiment
 from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
 
-from data_loader import DataLoader
 from model import Model
+from preprocessing.padding import pad_batch
 from preprocessor import Preprocessor
+from stock_dataset import StockDataset
 from utils import load_config
 
 
@@ -90,8 +92,19 @@ class Executor:
         plt.show()
 
 
+def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    config = load_config()
+    dataset = StockDataset(config, device=device)
+    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=True, collate_fn=collate)
+
+    for i_batch, sample_batched_dict in enumerate(data_loader):
+        print(i_batch)
+
+
+def collate(samples):
+    return pad_batch(samples)
+
+
 if __name__ == '__main__':
-    executor = Executor()
-    executor.train()
-    # executor.visualize_labels()
-    print('Finished Training')
+    main()

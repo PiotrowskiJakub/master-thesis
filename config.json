@@ -4,7 +4,10 @@
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
     "tickers_path": "data/stock_tickers.csv",
-    "data_path": "data/data.pickle"
+    "data_path": "data/data.pickle",
+    "past_days": 100,
+    "forecast_days": 10,
+    "change_threshold_boundaries": [0.1, 0.05, 0.03]
   },
   "model": {
     "learning_rate": 0.001,
@@ -12,6 +15,7 @@
     "hidden_size": 512,
     "output_size": 7,
     "layers_num": 4,
+    "batch_size": 4,
     "epochs": 50
   }
 }
