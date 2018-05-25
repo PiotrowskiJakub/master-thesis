@@ -7,12 +7,15 @@ def pad(tensors):
     padded_tensors = []
     for tensor in tensors:
         padding_length = max_length - tensor.size(0)
+        if padding_length == 0:
+            padded_tensors.append(tensor)
+            continue
         features = []
         for dim in range(tensor.size(1)):
             feature = tensor[:, dim]
             padded_value = feature[-1]
             features.append(F.pad(feature, (0, padding_length), value=padded_value))
-        padded_tensors.append(torch.stack(features).view(max_length, -1))
+        padded_tensors.append(torch.stack(features, dim=1))
 
     return torch.stack(padded_tensors)
 
@@ -24,5 +27,5 @@ def pad_batch(samples):
 
     return {
         'input': padded_input_tensors,
-        'label': label_tensors
+        'label': torch.stack(label_tensors)
     }

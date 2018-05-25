@@ -4,7 +4,6 @@ import datetime
 import numpy as np
 import quandl
 import torch
-from sklearn import preprocessing
 from torch.utils.data import Dataset
 
 from utils import load_pickle, save_pickle
@@ -14,12 +13,26 @@ class StockDataset(Dataset):
 
     def __init__(self, config, device):
         data_config = config['data']
-        raw_data = load_raw_data(data_config)
+        raw_data = StockDataset._load_raw_data(data_config)
         self._device = device
-        self._input_label_pairs = StockDataset.preprocess_data(raw_data, data_config=data_config)
+        self._input_label_pairs = StockDataset._prepare_raw_data(raw_data, data_config=data_config)
 
     @staticmethod
-    def preprocess_data(raw_data, data_config):
+    def _load_raw_data(data_config):
+        data_path = data_config['data_path']
+        data = load_pickle(data_path)
+        if data is None:
+            quandl.ApiConfig.api_key = data_config['quandl_key']
+            tickers = ['WIKI/' + ticker for ticker in load_tickers(data_config['tickers_path'])]
+            start_date = datetime.date(1990, 1, 1)
+            end_date = datetime.datetime.now().date()
+            data = quandl.get(tickers, start_date=start_date, end_date=end_date)
+            save_pickle(data, data_path)
+
+        return data
+
+    @staticmethod
+    def _prepare_raw_data(raw_data, data_config):
         input_label_pairs = []
 
         past_days = data_config['past_days']
@@ -84,20 +97,6 @@ class StockDataset(Dataset):
         }
 
         return sample
-
-
-def load_raw_data(data_config):
-    data_path = data_config['data_path']
-    data = load_pickle(data_path)
-    if data is None:
-        quandl.ApiConfig.api_key = data_config['quandl_key']
-        tickers = ['WIKI/' + ticker for ticker in load_tickers(data_config['tickers_path'])]
-        start_date = datetime.date(1990, 1, 1)
-        end_date = datetime.datetime.now().date()
-        data = quandl.get(tickers, start_date=start_date, end_date=end_date)
-        save_pickle(data, data_path)
-
-    return data
 
 
 def load_tickers(tickers_path):

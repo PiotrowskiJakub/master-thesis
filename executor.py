@@ -92,6 +92,10 @@ class Executor:
         plt.show()
 
 
+def collate(samples):
+    return pad_batch(samples)
+
+
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     config = load_config()
@@ -100,10 +104,6 @@ def main():
 
     for i_batch, sample_batched_dict in enumerate(data_loader):
         print(i_batch)
-
-
-def collate(samples):
-    return pad_batch(samples)
 
 
 if __name__ == '__main__':
