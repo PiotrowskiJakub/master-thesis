@@ -40,6 +40,8 @@ class StockDataset(Dataset):
 
         close = select_column(raw_data, 'Adj. Close').as_matrix()
         volume = select_column(raw_data, 'Adj. Volume').as_matrix()
+        max_close = np.nanmax(close)
+        max_volume = np.nanmax(volume)
 
         for company_num in range(close.shape[1]):
             i = 0
@@ -56,7 +58,7 @@ class StockDataset(Dataset):
                 y = StockDataset._generate_labels(change_percentage, data_config=data_config)
                 derivatives = np.diff(close_input)
                 derivatives = np.append(derivatives, derivatives[-1])
-                input = list(zip(close_input, volume_input))
+                input = list(zip(close_input / max_close, volume_input / max_volume))
                 input_label_pairs.append((input, y))
 
         return input_label_pairs
