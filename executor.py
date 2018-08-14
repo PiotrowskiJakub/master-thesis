@@ -17,6 +17,7 @@ def main():
     config = load_config()
     if config['random_seed']:
         random.seed(config['random_seed'])
+        torch.manual_seed(config['random_seed'])
     if config['use_cometml']:
         experiment = Experiment(api_key=config['comet_key'], project_name=config['project_name'])
     else:
@@ -25,7 +26,7 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dataset = StockDataset(config, device=device)
-    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=True, collate_fn=collate)
+    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=False, collate_fn=collate)
     # visualize_data(dataset)
 
     model_config = config['model']

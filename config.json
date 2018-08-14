@@ -5,7 +5,7 @@
   "random_seed": 42,
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
-    "tickers_path": "data/stock_tickers.csv",
+    "tickers_path": "data/stock_tickers_small.csv",
     "data_path": "data/data.pickle",
     "past_days": 100,
     "forecast_days": 10,
