@@ -1,21 +1,23 @@
 import csv
 import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import quandl
+import seaborn as sns
 import torch
 from torch.utils.data import Dataset
 
-from utils import load_pickle, save_pickle
+from utils import load_pickle, save_pickle, load_config
 
 
 class StockDataset(Dataset):
 
-    def __init__(self, config, device):
+    def __init__(self, config, device, normalize=True):
         data_config = config['data']
         raw_data = StockDataset._load_raw_data(data_config)
         self._device = device
-        self._input_label_pairs = StockDataset._prepare_raw_data(raw_data, data_config=data_config)
+        self.input_label_pairs = StockDataset._prepare_raw_data(raw_data, data_config=data_config, normalize=normalize)
 
     @staticmethod
     def _load_raw_data(data_config):
@@ -32,7 +34,7 @@ class StockDataset(Dataset):
         return data
 
     @staticmethod
-    def _prepare_raw_data(raw_data, data_config):
+    def _prepare_raw_data(raw_data, data_config, normalize):
         input_label_pairs = []
 
         past_days = data_config['past_days']
@@ -45,21 +47,24 @@ class StockDataset(Dataset):
 
         for company_num in range(close.shape[1]):
             i = 0
-            while i < close.shape[0]:
-                close_input = remove_nan(close[i:i + past_days, company_num])
-                volume_input = remove_nan(volume[i:i + past_days, company_num])
-                prices = remove_nan(close[i + past_days:i + past_days + forecast_days, company_num])
+            while i < close.shape[0] - past_days:
+                close_input = close[i:i + past_days, company_num]
+                volume_input = volume[i:i + past_days, company_num]
+                prices = close[i + past_days:i + past_days + forecast_days, company_num]
                 i = i + past_days
-                if prices.size == 0 or close_input.size == 0 or volume_input.size == 0:
+                if np.isnan(np.concatenate((close_input, volume_input, prices))).any():
                     continue
                 max_price = np.max(prices)
                 last_mean = np.mean(close_input[-forecast_days:])
                 change_percentage = (max_price - last_mean) / last_mean
                 y = StockDataset._generate_labels(change_percentage, data_config=data_config)
-                derivatives = np.diff(close_input)
-                derivatives = np.append(derivatives, derivatives[-1])
-                input = list(zip(close_input / max_close, volume_input / max_volume))
-                input_label_pairs.append((input, y))
+                # derivatives = np.diff(close_input)
+                # derivatives = np.append(derivatives, derivatives[-1])
+                if normalize:
+                    inputs = list(zip(close_input / max_close, volume_input / max_volume))
+                else:
+                    inputs = list(zip(close_input, volume_input))
+                input_label_pairs.append((inputs, y))
 
         return input_label_pairs
 
@@ -88,11 +93,11 @@ class StockDataset(Dataset):
         return change_vector
 
     def __len__(self):
-        return len(self._input_label_pairs)
+        return len(self.input_label_pairs)
 
     def __getitem__(self, idx):
-        input_tensor = torch.tensor(self._input_label_pairs[idx][0], dtype=torch.float, device=self._device)
-        label_tensor = torch.tensor(self._input_label_pairs[idx][1], dtype=torch.float, device=self._device)
+        input_tensor = torch.tensor(self.input_label_pairs[idx][0], dtype=torch.float, device=self._device)
+        label_tensor = torch.tensor(self.input_label_pairs[idx][1], dtype=torch.float, device=self._device)
         sample = {
             'input': input_tensor,
             'label': label_tensor
@@ -108,9 +113,52 @@ def load_tickers(tickers_path):
     return tickers
 
 
-def remove_nan(array):
-    return array[~np.isnan(array)]
-
-
 def select_column(data, col_name):
     return data.select(lambda col: col.endswith(col_name), axis=1)
+
+
+def plot_labels_distribution(config):
+    dataset = StockDataset(config, None, normalize=False)
+    label_classes = np.argmax([p[1] for p in dataset.input_label_pairs], axis=1) + 1
+    ax = sns.distplot(label_classes, kde=False, label='Dupa')
+    ax.set_xlabel('Category')
+    ax.set_ylabel('Quantity')
+    plt.show()
+
+
+def plot_input_distribution_unnormalized(config):
+    dataset = StockDataset(config, None, normalize=False)
+    prices = []
+    volumes = []
+    fig = plt.figure()
+    for data in dataset:
+        prices += data['input'][:, 0].tolist()
+        volumes += data['input'][:, 1].tolist()
+    prices_low = [p for p in prices if p < 300]
+    prices_high = [p for p in prices if p >= 300]
+    volumes_low = [v for v in volumes if v < 15000000]
+    volumes_high = [v for v in volumes if v >= 15000000]
+    ax1 = fig.add_subplot(221)
+    ax2 = fig.add_subplot(222)
+    ax3 = fig.add_subplot(223)
+    ax4 = fig.add_subplot(224)
+    ax1.set_xlabel('Price')
+    ax2.set_xlabel('Price')
+    ax3.set_xlabel('Volume')
+    ax4.set_xlabel('Volume')
+    ax1.set_ylabel('Quantity')
+    ax2.set_ylabel('Quantity')
+    ax3.set_ylabel('Quantity')
+    ax4.set_ylabel('Quantity')
+    sns.distplot(prices_low, kde=False, ax=ax1)
+    sns.distplot(prices_high, kde=False, ax=ax2)
+    sns.distplot(volumes_low, kde=False, ax=ax3)
+    sns.distplot(volumes_high, kde=False, ax=ax4)
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == '__main__':
+    config = load_config()
+    plot_labels_distribution(config)
+    plot_input_distribution_unnormalized(config)

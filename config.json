@@ -6,7 +6,7 @@
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
     "tickers_path": "data/stock_tickers_small.csv",
-    "data_path": "data/data_small.pickle",
+    "data_path": "data/data.pickle",
     "past_days": 100,
     "forecast_days": 10,
     "change_threshold_boundaries": [0.1, 0.05, 0.03]
