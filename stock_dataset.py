@@ -40,10 +40,8 @@ class StockDataset(Dataset):
         past_days = data_config['past_days']
         forecast_days = data_config['forecast_days']
 
-        close = select_column(raw_data, 'Adj. Close').as_matrix()
-        volume = select_column(raw_data, 'Adj. Volume').as_matrix()
-        max_close = np.nanmax(close)
-        max_volume = np.nanmax(volume)
+        close = select_column(raw_data, 'Adj. Close').values
+        volume = select_column(raw_data, 'Adj. Volume').values
 
         for company_num in range(close.shape[1]):
             i = 0
@@ -61,7 +59,9 @@ class StockDataset(Dataset):
                 # derivatives = np.diff(close_input)
                 # derivatives = np.append(derivatives, derivatives[-1])
                 if normalize:
-                    inputs = list(zip(close_input / max_close, volume_input / max_volume))
+                    close_input_normalized = (close_input - np.mean(close_input)) / np.std(close_input)
+                    volume_input_normalized = (volume_input - np.mean(volume_input)) / np.std(volume_input)
+                    inputs = list(zip(close_input_normalized, volume_input_normalized))
                 else:
                     inputs = list(zip(close_input, volume_input))
                 input_label_pairs.append((inputs, y))
@@ -158,7 +158,28 @@ def plot_input_distribution_unnormalized(config):
     plt.show()
 
 
+def plot_input_distribution_normalized(config):
+    dataset = StockDataset(config, None, normalize=True)
+    prices = []
+    volumes = []
+    fig = plt.figure()
+    for data in dataset:
+        prices += data['input'][:, 0].tolist()
+        volumes += data['input'][:, 1].tolist()
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+    ax1.set_xlabel('Normalized price')
+    ax2.set_xlabel('Normalized volume')
+    ax1.set_ylabel('Quantity')
+    ax2.set_ylabel('Quantity')
+    sns.distplot(prices, kde=False, ax=ax1)
+    sns.distplot(volumes, kde=False, ax=ax2)
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == '__main__':
     config = load_config()
     plot_labels_distribution(config)
     plot_input_distribution_unnormalized(config)
+    plot_input_distribution_normalized(config)
