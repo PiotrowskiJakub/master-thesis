@@ -23,15 +23,18 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     train_dataset = StockDataset(config, device=device, mode='train')
-    data_loader = DataLoader(train_dataset, batch_size=config['model']['batch_size'], shuffle=True)
+    train_data_loader = DataLoader(train_dataset, batch_size=config['model']['batch_size'], shuffle=True)
+
+    dev_dataset = StockDataset(config, device=device, mode='dev')
+    dev_data_loader = DataLoader(dev_dataset, batch_size=config['model']['batch_size'], shuffle=False)
 
     model = Model(input_size=model_config['input_size'], hidden_size=model_config['hidden_size'],
                   output_size=model_config['output_size'], num_layers=model_config['num_layers'], device=device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config['learning_rate'])
 
-    train(model=model, criterion=criterion, optimizer=optimizer, train_data_loader=data_loader,
-          epochs_count=model_config['epochs_count'], experiment=experiment)
+    train(model=model, criterion=criterion, optimizer=optimizer, train_data_loader=train_data_loader,
+          dev_data_loader=dev_data_loader, epochs_count=model_config['epochs_count'], experiment=experiment)
 
 
 def collate(samples):
