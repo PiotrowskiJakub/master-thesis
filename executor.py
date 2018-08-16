@@ -22,8 +22,8 @@ def main():
     experiment.log_multiple_params(model_config)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    dataset = StockDataset(config, device=device)
-    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=True)
+    train_dataset = StockDataset(config, device=device, mode='train')
+    data_loader = DataLoader(train_dataset, batch_size=config['model']['batch_size'], shuffle=True)
 
     model = Model(input_size=model_config['input_size'], hidden_size=model_config['hidden_size'],
                   output_size=model_config['output_size'], num_layers=model_config['num_layers'], device=device)

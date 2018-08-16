@@ -1,7 +1,7 @@
 .DS_Store
 .idea/
 __pycache__/
-data/data*.pickle
+data/**/data*.pickle
 
 # virtualenv folder
 venv/

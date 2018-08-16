@@ -1,5 +1,6 @@
 import csv
 import datetime
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,19 +14,20 @@ from utils import load_pickle, save_pickle, load_config
 
 class StockDataset(Dataset):
 
-    def __init__(self, config, device, normalize=True):
+    def __init__(self, config, device, mode, normalize=True):
         data_config = config['data']
-        raw_data = StockDataset._load_raw_data(data_config)
+        raw_data = StockDataset._load_raw_data(data_config, mode)
         self._device = device
         self.input_label_pairs = StockDataset._prepare_raw_data(raw_data, data_config=data_config, normalize=normalize)
 
     @staticmethod
-    def _load_raw_data(data_config):
-        data_path = data_config['data_path']
+    def _load_raw_data(data_config, mode):
+        data_path = os.path.join('data', mode, data_config['data_filename'])
         data = load_pickle(data_path)
         if data is None:
             quandl.ApiConfig.api_key = data_config['quandl_key']
-            tickers = ['WIKI/' + ticker for ticker in load_tickers(data_config['tickers_path'])]
+            tickers_path = os.path.join('data', mode, data_config['tickers_filename'])
+            tickers = ['WIKI/' + ticker for ticker in load_tickers(tickers_path)]
             start_date = datetime.date(1990, 1, 1)
             end_date = datetime.datetime.now().date()
             data = quandl.get(tickers, start_date=start_date, end_date=end_date)
@@ -92,6 +94,9 @@ class StockDataset(Dataset):
         change_vector[len(change_threshold_boundaries)] = 1
         return change_vector
 
+    def get_subset(self, step):
+        return self.input_label_pairs[::step]
+
     def __len__(self):
         return len(self.input_label_pairs)
 
@@ -117,8 +122,8 @@ def select_column(data, col_name):
     return data.select(lambda col: col.endswith(col_name), axis=1)
 
 
-def plot_labels_distribution(config):
-    dataset = StockDataset(config, None, normalize=False)
+def plot_labels_distribution(config, mode):
+    dataset = StockDataset(config, None, mode=mode, normalize=False)
     label_classes = np.argmax([p[1] for p in dataset.input_label_pairs], axis=1) + 1
     ax = sns.distplot(label_classes, kde=False, label='Dupa')
     ax.set_xlabel('Category')
@@ -126,8 +131,8 @@ def plot_labels_distribution(config):
     plt.show()
 
 
-def plot_input_distribution_unnormalized(config):
-    dataset = StockDataset(config, 'cpu', normalize=False)
+def plot_input_distribution_unnormalized(config, mode):
+    dataset = StockDataset(config, 'cpu', mode=mode, normalize=False)
     prices = []
     volumes = []
     fig = plt.figure()
@@ -158,8 +163,8 @@ def plot_input_distribution_unnormalized(config):
     plt.show()
 
 
-def plot_input_distribution_normalized(config):
-    dataset = StockDataset(config, 'cpu', normalize=True)
+def plot_input_distribution_normalized(config, mode):
+    dataset = StockDataset(config, 'cpu', mode=mode, normalize=True)
     prices = []
     volumes = []
     fig = plt.figure()
@@ -180,6 +185,7 @@ def plot_input_distribution_normalized(config):
 
 if __name__ == '__main__':
     config = load_config()
-    plot_labels_distribution(config)
-    plot_input_distribution_unnormalized(config)
-    plot_input_distribution_normalized(config)
+    mode = 'train'
+    plot_labels_distribution(config, mode)
+    plot_input_distribution_unnormalized(config, mode)
+    plot_input_distribution_normalized(config, mode)
