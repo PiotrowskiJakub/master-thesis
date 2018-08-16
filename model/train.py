@@ -2,6 +2,7 @@ def train(model, criterion, optimizer, train_data_loader, epochs_count, experime
     with experiment.train():
         for epoch_i in range(epochs_count):
             # correct = 0
+            experiment.log_current_epoch(epoch_i)
             print('Epoch: {}'.format(epoch_i))
             for i_batch, sample_batched_dict in enumerate(train_data_loader):
                 input_batch = sample_batched_dict['input']

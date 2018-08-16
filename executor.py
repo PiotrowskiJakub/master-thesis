@@ -1,5 +1,4 @@
 import random
-import unittest.mock
 
 import torch
 from comet_ml import Experiment
@@ -16,10 +15,8 @@ def main():
     if config['random_seed']:
         random.seed(config['random_seed'])
         torch.manual_seed(config['random_seed'])
-    if config['use_cometml']:
-        experiment = Experiment(api_key=config['comet_key'], project_name=config['project_name'])
-    else:
-        experiment = unittest.mock.create_autospec(Experiment)
+    disable_cometml = not config['use_cometml']
+    experiment = Experiment(api_key=config['comet_key'], project_name=config['project_name'], disabled=disable_cometml)
 
     model_config = config['model']
     experiment.log_multiple_params(model_config)
