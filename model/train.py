@@ -1,7 +1,7 @@
 import torch
 
 
-def train(model, criterion, optimizer, train_data_loader, dev_data_loader, epochs_count, experiment):
+def train_and_evaluate(model, criterion, optimizer, train_data_loader, dev_data_loader, epochs_count, experiment):
     for step, epoch_i in enumerate(range(epochs_count), 1):
         model.train()
         correct = 0

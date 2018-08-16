@@ -4,7 +4,7 @@ import torch
 from comet_ml import Experiment
 from torch.utils.data import DataLoader
 
-from model import Model, train
+from model import Model, train_and_evaluate
 from preprocessing.padding import pad_batch
 from stock_dataset import StockDataset
 from utils import load_config
@@ -34,8 +34,13 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config['learning_rate'])
 
-    train(model=model, criterion=criterion, optimizer=optimizer, train_data_loader=train_data_loader,
-          dev_data_loader=dev_data_loader, epochs_count=model_config['epochs_count'], experiment=experiment)
+    train_and_evaluate(model=model,
+                       criterion=criterion,
+                       optimizer=optimizer,
+                       train_data_loader=train_data_loader,
+                       dev_data_loader=dev_data_loader,
+                       epochs_count=model_config['epochs_count'],
+                       experiment=experiment)
 
 
 def collate(samples):
