@@ -127,7 +127,7 @@ def plot_labels_distribution(config):
 
 
 def plot_input_distribution_unnormalized(config):
-    dataset = StockDataset(config, None, normalize=False)
+    dataset = StockDataset(config, 'cpu', normalize=False)
     prices = []
     volumes = []
     fig = plt.figure()
@@ -159,7 +159,7 @@ def plot_input_distribution_unnormalized(config):
 
 
 def plot_input_distribution_normalized(config):
-    dataset = StockDataset(config, None, normalize=True)
+    dataset = StockDataset(config, 'cpu', normalize=True)
     prices = []
     volumes = []
     fig = plt.figure()

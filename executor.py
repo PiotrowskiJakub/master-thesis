@@ -20,13 +20,14 @@ def main():
         experiment = Experiment(api_key=config['comet_key'], project_name=config['project_name'])
     else:
         experiment = unittest.mock.create_autospec(Experiment)
-    experiment.log_multiple_params(config['model'])
+
+    model_config = config['model']
+    experiment.log_multiple_params(model_config)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dataset = StockDataset(config, device=device)
-    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=False, collate_fn=collate)
+    data_loader = DataLoader(dataset, batch_size=config['model']['batch_size'], shuffle=True)
 
-    model_config = config['model']
     model = Model(input_size=model_config['input_size'], hidden_size=model_config['hidden_size'],
                   output_size=model_config['output_size'], num_layers=model_config['num_layers'], device=device)
     criterion = torch.nn.CrossEntropyLoss()
