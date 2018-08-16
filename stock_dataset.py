@@ -119,7 +119,8 @@ def load_tickers(tickers_path):
 
 
 def select_column(data, col_name):
-    return data.select(lambda col: col.endswith(col_name), axis=1)
+    # return data.select(lambda col: col.endswith(col_name), axis=1)
+    return data[data.columns[data.columns.to_series().str.endswith(col_name)]]
 
 
 def plot_labels_distribution(config, mode):

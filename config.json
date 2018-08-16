@@ -1,7 +1,7 @@
 {
   "comet_key": "rhoJOirQx3GFfhzraNvBxk05c",
   "project_name": "master-thesis",
-  "use_cometml": false,
+  "use_cometml": true,
   "random_seed": 42,
   "data": {
     "quandl_key": "jPGm5gjF1imaezGU9QMU",
@@ -14,7 +14,7 @@
   "model": {
     "learning_rate": 0.0001,
     "input_size": 2,
-    "hidden_size": 128,
+    "hidden_size": 256,
     "output_size": 7,
     "num_layers": 2,
     "batch_size": 1,
