@@ -29,7 +29,8 @@ def main():
     dev_data_loader = DataLoader(dev_dataset, batch_size=config['model']['batch_size'], shuffle=False)
 
     model = Model(input_size=model_config['input_size'], hidden_size=model_config['hidden_size'],
-                  output_size=model_config['output_size'], num_layers=model_config['num_layers'], device=device)
+                  output_size=model_config['output_size'], num_layers=model_config['num_layers'],
+                  dropout=model_config['dropout'], device=device)
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=model_config['learning_rate'])
 

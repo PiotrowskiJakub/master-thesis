@@ -17,6 +17,7 @@
     "hidden_size": 256,
     "output_size": 7,
     "num_layers": 2,
+    "dropout": 0.15,
     "batch_size": 1,
     "epochs_count": 90
   }

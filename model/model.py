@@ -2,9 +2,10 @@ import torch.nn as nn
 
 
 class Model(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers, device):
+    def __init__(self, input_size, hidden_size, output_size, num_layers, dropout, device):
         super(Model, self).__init__()
-        self._gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True)
+        self._gru = nn.GRU(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers,
+                           dropout=dropout, batch_first=True)
         self._out_module = nn.Linear(in_features=hidden_size, out_features=output_size)
         if device.type == 'cuda':
             self._gru.cuda()
