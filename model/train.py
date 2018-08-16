@@ -1,20 +1,25 @@
+import torch
+
+
 def train(model, criterion, optimizer, train_data_loader, epochs_count, experiment):
     with experiment.train():
+        model.train()
         for epoch_i in range(epochs_count):
-            # correct = 0
+            correct = 0
             experiment.log_current_epoch(epoch_i)
             print('Epoch: {}'.format(epoch_i))
             for i_batch, sample_batched_dict in enumerate(train_data_loader):
                 input_batch = sample_batched_dict['input']
                 label_batch = sample_batched_dict['label']
-                loss = _training_batch_step(input_batch=input_batch, label_batch=label_batch, model=model,
-                                            optimizer=optimizer, criterion=criterion)
-                # _, predicted = torch.max(output.data, 1)
-                # correct += (predicted == out).sum()
-                # print('Training loss: %.3f. Accuracy: %.3f' % (loss, correct / (i + 1)))
-                print('Training loss: %.3f' % loss)
+                output, loss = _training_batch_step(input_batch=input_batch, label_batch=label_batch, model=model,
+                                                    optimizer=optimizer, criterion=criterion)
+                _, predicted = torch.max(output.data, 1)
+                _, ref = torch.max(label_batch, 1)
+                correct += (predicted == ref).sum()
+                accuracy = int(correct) / (i_batch + 1)
+                print('Training loss: %.3f. Accuracy: %.3f' % (loss, accuracy))
                 experiment.log_metric('loss', loss)
-                # self.experiment.log_metric('accuracy', int(correct) / (i + 1))
+                experiment.log_metric('accuracy', accuracy)
 
 
 def _training_batch_step(input_batch, label_batch, model, optimizer, criterion):
@@ -26,7 +31,7 @@ def _training_batch_step(input_batch, label_batch, model, optimizer, criterion):
     loss.backward()
     optimizer.step()
 
-    return loss
+    return output, loss
 
 # def test(self):
 #     correct = 0
